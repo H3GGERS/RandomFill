@@ -3,20 +3,38 @@
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
-// This plugin creates rectangles on the screen.
-const numberOfRectangles = 5;
+// code.ts
 
-const nodes: SceneNode[] = [];
-for (let i = 0; i < numberOfRectangles; i++) {
-  const rect = figma.createRectangle();
-  rect.x = i * 150;
-  rect.fills = [{ type: 'SOLID', color: { r: 1, g: 0.5, b: 0 } }];
-  figma.currentPage.appendChild(rect);
-  nodes.push(rect);
+// List of color token names to pull from
+const colorTokenNames = ['Token/Primary', 'Token/Secondary', 'Token/Accent', 'Token/Neutral'];
+
+function getRandomElement<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
-figma.currentPage.selection = nodes;
-figma.viewport.scrollAndZoomIntoView(nodes);
 
-// Make sure to close the plugin when you're done. Otherwise the plugin will
-// keep running, which shows the cancel button at the bottom of the screen.
-figma.closePlugin();
+const selection = figma.currentPage.selection;
+
+if (selection.length === 0) {
+  figma.notify("Please select at least one object.");
+  figma.closePlugin();
+} else {
+  // Get all paint styles in the document
+  const allPaintStyles = figma.getLocalPaintStyles();
+
+  // Filter to only styles that match the token names
+  const colorTokens = allPaintStyles.filter(style => colorTokenNames.includes(style.name));
+
+  if (colorTokens.length === 0) {
+    figma.notify("No matching color tokens found.");
+    figma.closePlugin();
+  } else {
+    for (const node of selection) {
+      if ("fills" in node) {
+        const randomStyle = getRandomElement(colorTokens);
+        node.fillStyleId = randomStyle.id;
+      }
+    }
+    figma.notify("Random color tokens assigned!");
+    figma.closePlugin();
+  }
+}
