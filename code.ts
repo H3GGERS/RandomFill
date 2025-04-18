@@ -25,9 +25,9 @@ function interpolateColor(c1: RGB, c2: RGB, t: number): RGB {
 }
 
 function getColorFromGradient(t: number): RGB {
-  const red = hexToRgb("#e34842");   // 0%
-  const mid = hexToRgb("#424553");   // 50%
-  const green = hexToRgb("#66c868"); // 100%
+  const red = hexToRgb("#424553");   // 0%
+  const mid = hexToRgb("#53725C");   // 50%
+  const green = hexToRgb("#659E66"); // 100%
 
   if (t <= 0.5) {
     return interpolateColor(red, mid, t * 2);
