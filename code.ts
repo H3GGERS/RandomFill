@@ -1,7 +1,4 @@
-// code.ts
-
-// Plugin: Set Random Fill from Custom Gradient
-// Description: Randomly assigns a color to selected nodes by sampling from a linear gradient
+figma.showUI(__html__, { width: 300, height: 200 });
 
 function hexToRgb(hex: string): RGB {
   const bigint = parseInt(hex.replace('#', ''), 16);
@@ -24,35 +21,38 @@ function interpolateColor(c1: RGB, c2: RGB, t: number): RGB {
   };
 }
 
-function getColorFromGradient(t: number): RGB {
-  const red = hexToRgb("#424553");   // 0%
-  const mid = hexToRgb("#53725C");   // 50%
-  const green = hexToRgb("#659E66"); // 100%
-
-  if (t <= 0.5) {
-    return interpolateColor(red, mid, t * 2);
-  } else {
-    return interpolateColor(mid, green, (t - 0.5) * 2);
-  }
+function getColorFromGradient(c1: RGB, c2: RGB, c3: RGB, t: number): RGB {
+  return t <= 0.5
+    ? interpolateColor(c1, c2, t * 2)
+    : interpolateColor(c2, c3, (t - 0.5) * 2);
 }
 
-const selection = figma.currentPage.selection;
+figma.ui.onmessage = (msg) => {
+  if (msg.type === 'apply-gradient') {
+    const [hex1, hex2, hex3] = msg.colors;
+    const rgb1 = hexToRgb(hex1);
+    const rgb2 = hexToRgb(hex2);
+    const rgb3 = hexToRgb(hex3);
 
-if (selection.length === 0) {
-  figma.notify("Please select one or more objects.");
-  figma.closePlugin();
-} else {
-  for (const node of selection) {
-    if ("fills" in node && Array.isArray(node.fills)) {
-      const t = Math.random();
-      const color = getColorFromGradient(t);
-      const newPaint: Paint = {
-        type: "SOLID",
-        color,
-      };
-      node.fills = [newPaint];
+    const selection = figma.currentPage.selection;
+
+    if (selection.length === 0) {
+      figma.notify("Please select one or more objects.");
+    } else {
+      for (const node of selection) {
+        if ("fills" in node && Array.isArray(node.fills)) {
+          const t = Math.random();
+          const color = getColorFromGradient(rgb1, rgb2, rgb3, t);
+          const newPaint: Paint = {
+            type: "SOLID",
+            color,
+          };
+          node.fills = [newPaint];
+        }
+      }
+      figma.notify("Applied custom gradient colors.");
     }
+
+    figma.closePlugin();
   }
-  figma.notify("Applied colors from gradient to selection.");
-  figma.closePlugin();
-}
+};
